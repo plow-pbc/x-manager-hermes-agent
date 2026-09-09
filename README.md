@@ -57,6 +57,11 @@ rule it earned in public applies here unchanged, and one is new.
 - **Never silent.** Answer from the facts, or send them to Discord. Never a
   date, a price or a rule invented to fill the gap — an agent on this job once
   told a real buyer to click a button that did not exist.
+- **The job the producer fires is created at boot.** `hermes cron create`
+  writes a file nothing replays, so a fresh install has no `x-reply` job and
+  every fire comes back "not found" while the poller still looks healthy. That
+  happened here: a tweet sat queued and unanswered and only a log line said so.
+  `x-cron` creates it if it is missing, and leaves it alone if it is not.
 - **Links are an allowlist, not a ban.** The Mac skill this replaces refuses
   every URL, which would make a launch thread impossible. `X_ALLOWED_HOSTS` is
   what stops a stranger's tweet from getting their link published in the

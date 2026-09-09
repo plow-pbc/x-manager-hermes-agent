@@ -42,6 +42,7 @@ RUN set -eu; \
     chmod 0644 /opt/plow/agent-index-client.py
 
 COPY image/s6-overlay/ /etc/s6-overlay/
+RUN chmod 0755 /etc/s6-overlay/scripts/x-cron.sh
 
 # The four directories the two halves talk through, plus the facts file the
 # owner fills in. All inside the home so they survive a rebuild.
