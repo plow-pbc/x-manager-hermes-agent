@@ -86,7 +86,8 @@ what it would have sent to `sent/`. Read a few of those, then arm it:
 X_ARMED=1 docker compose up -d
 ```
 
-Register the Agent Index page once, from the checkout:
+It is on the Agent Index at <https://aiworthusing.com/agent-index/x-manager>.
+To register your own, once, from the checkout:
 
 ```sh
 curl -O https://raw.githubusercontent.com/plow-pbc/agent-index-client/main/standalone/agent_index_client.py
