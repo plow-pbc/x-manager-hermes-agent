@@ -207,6 +207,8 @@ Discord; jokes receive a short answer without a link.
 All replies under your own posts are eligible; bare mentions are keyword-filtered.
 You can set comma-separated `X_KEYWORDS` in `.env` for your topic. If you allow a
 new link destination, also set `X_ALLOWED_HOSTS` to the exact allowed domains.
+YouTube (`youtube.com`, including `www`, and `youtu.be`) is supported by default.
+This is a setting of this installation, not a permission in the Plow dashboard.
 
 The `media` directory is an optional preloaded image library; leave it empty
 for normal use. **Send an image in your Plow chat and ask the agent to post it.**

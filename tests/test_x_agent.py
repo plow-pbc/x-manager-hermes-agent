@@ -126,6 +126,17 @@ class Guards(Base):
         self.assertIsNone(self.refusal({"text": "see https://luma.com/3uftu95w"}))
         self.assertIsNotNone(self.refusal({"text": "see https://evil.example/x"}))
 
+    def test_youtube_links_are_allowed_but_lookalike_domains_are_not(self):
+        for url in ["https://youtu.be/I1-izime3YE",
+                    "https://www.youtube.com/watch?v=I1-izime3YE",
+                    "https://youtube.com/watch?v=I1-izime3YE"]:
+            with self.subTest(url=url):
+                self.assertIsNone(self.refusal({"text": "Watch: " + url}))
+        for url in ["https://youtube.com.evil.example/watch?v=abc",
+                    "https://youtube.com@evil.example/watch?v=abc"]:
+            with self.subTest(url=url):
+                self.assertIsNotNone(self.refusal({"text": "Watch: " + url}))
+
     def test_a_tweet_already_answered_is_refused(self):
         self.assertIsNotNone(self.refusal({"text": "hi", "reply_to": "7"}, {"7": "8"}))
 

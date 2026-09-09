@@ -68,7 +68,7 @@ ARMED = os.environ.get("X_ARMED", "").strip() == "1"
 ALLOWED_HOSTS = tuple(
     h for h in os.environ.get(
         "X_ALLOWED_HOSTS",
-        "luma.com,lu.ma,aiworthusing.com,discord.gg,producthunt.com,plow.co,github.com",
+        "luma.com,lu.ma,aiworthusing.com,discord.gg,producthunt.com,plow.co,github.com,youtube.com,youtu.be",
     ).split(",") if h
 )
 MAX_LEN = 280
