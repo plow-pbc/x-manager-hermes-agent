@@ -14,9 +14,12 @@ services:
       # dry-run flag travelled through the model's own shell and did not
       # survive: it posted for real. Nothing a turn can say reaches this line.
       X_ARMED: ${X_ARMED:-0}
-      # 120s. X's user-context mention timeline allows far fewer requests per
-      # 15 minutes than Product Hunt's point budget.
-      POLL_SEC: ${POLL_SEC:-120}
+      # 15s. Measured on the owner's account 2026-09-09: the mentions endpoint
+      # allows 450 requests per 15 minutes, and 15s spends 60 of them. Billing
+      # is per mention READ and deduped per day, not per request, so a poll
+      # that `since_id` makes empty costs nothing -- polling faster reads the
+      # same mentions sooner, not more of them.
+      POLL_SEC: ${POLL_SEC:-15}
       # Hosts this agent may put in a tweet. A launch thread is mostly a link,
       # so a blanket no-URL rule would make it useless for the job; the
       # allowlist is what keeps a stranger's tweet from getting a link of

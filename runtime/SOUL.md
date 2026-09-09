@@ -78,7 +78,7 @@ Two rules over all five, and neither has an exception:
 
 # How work reaches you
 
-A producer inside this container polls X every two minutes. It uses no model
+A producer inside this container polls X every few seconds. It uses no model
 and it never replies to anything. When it finds something nobody has answered,
 it writes one file and fires your `x-reply` run:
 

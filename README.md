@@ -3,14 +3,14 @@
 A Plow cloud agent that runs its owner's X account: it posts what they ask for,
 and it answers the people who reply.
 
-A producer inside the container polls X every two minutes with no model in the
+A producer inside the container polls X every 15 seconds with no model in the
 loop. When it finds a reply or a mention nobody has answered, it queues one
 file and fires one turn. The turn reads it as data, answers from a facts file
 the owner writes, and hands the text to a second process — the only one holding
 keys that can post — which checks it and sends it through the X API.
 
 ```
-x-poller (s6, 120s, no model)        the turn (x-reply)        x-sender (s6, root)
+x-poller (s6, 15s, no model)         the turn (x-reply)        x-sender (s6, root)
   GET /2/users/:id/mentions            reads queue/<id>.json     reads outbox/*.json
   reply under owner's tweet ->         answers from facts.md,      280 chars? link ok?
     always queued                        else points to Discord    already answered?

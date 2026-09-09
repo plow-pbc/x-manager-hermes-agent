@@ -65,10 +65,15 @@ RUN_TIMEOUT_S = int(os.environ.get("X_RUN_TIMEOUT_S", "600"))
 # no live adapter for the owner's chat, so its own report reaches a file nobody
 # opens; this is the only path out of the container that reaches a person.
 ALERT_AFTER_S = int(os.environ.get("X_ALERT_AFTER_S", "600"))
-# 120s, not the PH replier's 30s. X's user-context mention timeline allows far
-# fewer requests per 15 minutes than Product Hunt's point budget, and a mention
-# is not a launch-day comment race. 15min/120s = 7 or 8 requests a window.
-POLL_SEC = int(os.environ.get("POLL_SEC", "120"))
+# 15s. Measured on the owner's account 2026-09-09: `x-rate-limit-limit: 450`
+# per 15 minutes on this endpoint, so this spends 60 of 450. It is affordable
+# because X bills per mention READ, deduped per day, and never per request: a
+# cycle `since_id` makes empty is free, and a faster one reads the same
+# mentions sooner rather than more of them.
+#
+# This is the IDLE cadence only. deliver() blocks for as long as the turn it
+# fires takes, so a busy poller runs at the speed of its replies, not this.
+POLL_SEC = int(os.environ.get("POLL_SEC", "15"))
 # An event older than this is history, not a question waiting on us: on first
 # boot the mentions timeline hands back a backlog nobody wants answered now.
 EVENT_TTL_S = int(os.environ.get("X_EVENT_TTL_S", "21600"))
