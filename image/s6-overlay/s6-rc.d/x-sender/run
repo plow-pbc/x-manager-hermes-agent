@@ -18,8 +18,7 @@ export X_API_ENV HERMES_HOME
 # generation shipped a dry-run flag the model's own shell could set, and it
 # posted for real. This one is not reachable from a turn.
 X_ARMED=$(cat /run/s6/container_environment/X_ARMED 2>/dev/null || true)
-X_ALLOWED_HOSTS=$(cat /run/s6/container_environment/X_ALLOWED_HOSTS 2>/dev/null || true)
-export X_ARMED X_ALLOWED_HOSTS
+export X_ARMED
 
 if [ ! -r "$X_API_ENV" ]; then
   echo "x-sender: cannot read $X_API_ENV -- standing down. Mount the owner's" >&2

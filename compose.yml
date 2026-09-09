@@ -20,11 +20,6 @@ services:
       # that `since_id` makes empty costs nothing -- polling faster reads the
       # same mentions sooner, not more of them.
       POLL_SEC: ${POLL_SEC:-15}
-      # Hosts this agent may put in a tweet. A launch thread is mostly a link,
-      # so a blanket no-URL rule would make it useless for the job; the
-      # allowlist is what keeps a stranger's tweet from getting a link of
-      # theirs published under the owner's name.
-      X_ALLOWED_HOSTS: ${X_ALLOWED_HOSTS:-luma.com,lu.ma,aiworthusing.com,discord.gg,producthunt.com,plow.co,github.com,youtube.com,youtu.be}
       # Extra words that make a BARE mention worth a turn, comma separated.
       # Replies under the owner's own tweets are queued whatever they say.
       X_KEYWORDS: ${X_KEYWORDS:-}

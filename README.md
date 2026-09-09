@@ -22,7 +22,7 @@ needed. The optional preloaded media library still works.
 ## How it works
 
 `x-poller` reads mentions and queues eligible comments. A Hermes `x-reply` turn
-writes an outbox request. `x-sender` checks its length, allowed links, prior reply
+writes an outbox request. `x-sender` checks its length, attachments, prior reply
 ledger and the operator-controlled `X_ARMED` setting before posting. Write keys
 are mounted outside the agent's home and are not handed to the model process.
 

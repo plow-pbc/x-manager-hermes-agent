@@ -122,20 +122,14 @@ class Guards(Base):
     def test_over_280_characters_is_refused(self):
         self.assertIsNotNone(self.refusal({"text": "x" * 281}))
 
-    def test_a_link_off_the_allowlist_is_refused(self):
-        self.assertIsNone(self.refusal({"text": "see https://luma.com/3uftu95w"}))
-        self.assertIsNotNone(self.refusal({"text": "see https://evil.example/x"}))
-
-    def test_youtube_links_are_allowed_but_lookalike_domains_are_not(self):
+    def test_links_are_not_restricted_by_domain(self):
         for url in ["https://youtu.be/I1-izime3YE",
                     "https://www.youtube.com/watch?v=I1-izime3YE",
-                    "https://youtube.com/watch?v=I1-izime3YE"]:
+                    "https://any-new-site.example/path?q=value",
+                    "https://subdomain.another-site.example/page",
+                    "www.unlisted.example"]:
             with self.subTest(url=url):
-                self.assertIsNone(self.refusal({"text": "Watch: " + url}))
-        for url in ["https://youtube.com.evil.example/watch?v=abc",
-                    "https://youtube.com@evil.example/watch?v=abc"]:
-            with self.subTest(url=url):
-                self.assertIsNotNone(self.refusal({"text": "Watch: " + url}))
+                self.assertIsNone(self.refusal({"text": "See: " + url}))
 
     def test_a_tweet_already_answered_is_refused(self):
         self.assertIsNotNone(self.refusal({"text": "hi", "reply_to": "7"}, {"7": "8"}))

@@ -59,18 +59,6 @@ TICK_S = int(os.environ.get("X_SEND_TICK_S", "5"))
 MIN_GAP_S = int(os.environ.get("X_MIN_GAP_S", "5"))
 # The published brake. Anything but "1" means compose, check, and hold.
 ARMED = os.environ.get("X_ARMED", "").strip() == "1"
-# Links the owner is happy to see under his own name. A launch thread is mostly
-# a link, so a blanket no-URL rule (which is what the Mac skill uses) would
-# make this agent useless for the job it was built for; an allowlist keeps a
-# stranger's tweet from turning it into a link shortener for someone else.
-# ponytail: a flat domain list. If the owner ever needs a link per launch, the
-# upgrade is a per-post allowlist he writes beside facts.md, not a wildcard.
-ALLOWED_HOSTS = tuple(
-    h for h in os.environ.get(
-        "X_ALLOWED_HOSTS",
-        "luma.com,lu.ma,aiworthusing.com,discord.gg,producthunt.com,plow.co,github.com,youtube.com,youtu.be",
-    ).split(",") if h
-)
 MAX_LEN = 280
 UPLOAD_URL = "https://upload.x.com/1.1/media/upload.json"
 TWEETS_URL = "https://api.x.com/2/tweets"
@@ -190,14 +178,6 @@ def check(item: dict, ledger: dict) -> dict | None:
         return refuse("empty text")
     if len(text) > MAX_LEN:
         return refuse(f"{len(text)} characters, the limit is {MAX_LEN}")
-    for token in text.split():
-        if "://" not in token and not token.lower().startswith("www."):
-            continue
-        host = urllib.parse.urlparse(
-            token if "://" in token else f"https://{token}").hostname or ""
-        host = host.lower().removeprefix("www.")
-        if host not in ALLOWED_HOSTS:
-            return refuse(f"link to {host or token!r} is not on the allowlist")
     reply_to = item.get("reply_to")
     if reply_to is not None and not str(reply_to).isdigit():
         return refuse("reply_to is not a tweet id")
