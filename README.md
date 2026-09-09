@@ -15,6 +15,10 @@ test, public replies, and per-installation Agent Index reporting.
 
 [Agent Index page](https://aiworthusing.com/agent-index/danedelattre-x-manager)
 
+To post an image, send it to the agent in your Plow chat and ask for a post
+with that attachment. No public URL or manual server-side file transfer is
+needed. The optional preloaded media library still works.
+
 ## How it works
 
 `x-poller` reads mentions and queues eligible comments. A Hermes `x-reply` turn
@@ -37,8 +41,15 @@ each installer provisions a separate reporting identity without re-registering i
 
 ## Development checks
 
+Run the tests in the image to use the same Pillow image validator as the sender.
+Host-side account setup still requires only Python's standard library.
+
 ```sh
-python3 -m unittest discover -s tests
+docker build -t x-manager-test .
+docker run --rm --network none \
+  -v "$PWD/tests:/opt/plow/tests:ro" \
+  --entrypoint /opt/hermes/.venv/bin/python3 \
+  x-manager-test -m unittest discover -s /opt/plow/tests
 python3 -m compileall -q x-shared/scripts
 ```
 

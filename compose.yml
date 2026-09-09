@@ -44,8 +44,8 @@ services:
       # project folder, and the sender then stands down complaining about a
       # file that exists on the host. Better to refuse to start.
       - ${X_API_ENV:?set X_API_ENV to the absolute path of the owner's X keys}:/var/lib/plow/x-api.env:ro
-      # Images the agent may attach, by basename. Read-only: it chooses which
-      # of the owner's files go out, never what is in them.
+      # Optional preloaded image library. Chat attachments work directly from
+      # the Hermes cache in agent-home; users do not have to fill this folder.
       - ${X_MEDIA_DIR:-./media}:/var/lib/hermes/x/media:ro
       # The agent's home: its sessions, the X queue and outbox, the facts file,
       # and the poller's state all live here and survive `up`/`down`.

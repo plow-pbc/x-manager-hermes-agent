@@ -208,8 +208,14 @@ All replies under your own posts are eligible; bare mentions are keyword-filtere
 You can set comma-separated `X_KEYWORDS` in `.env` for your topic. If you allow a
 new link destination, also set `X_ALLOWED_HOSTS` to the exact allowed domains.
 
-Keep the `media` directory empty unless you want to provide your own images for
-posts. Paths in `.env` must be absolute paths on the Docker host, not paths on
+The `media` directory is an optional preloaded image library; leave it empty
+for normal use. **Send an image in your Plow chat and ask the agent to post it.**
+The sender uses that attachment directly—no public image URL, SCP, or manual
+file copy is required. Still PNG, JPEG, WebP and GIF images up to 5 MB each are
+supported, with at most four per post. If an old attachment has expired, resend
+it in chat. Sending an image by itself does not publish it.
+
+Paths in `.env` must be absolute paths on the Docker host, not paths on
 another laptop. Avoid a `~` prefix: Compose does not expand it as your home.
 
 `AGENT_ID` is the **software's existing Agent Index page**, not your X handle,

@@ -39,6 +39,8 @@ import urllib.parse
 import urllib.request
 import uuid
 
+from x_media import read_image
+
 HOME = pathlib.Path(os.environ.get("X_STATE_DIR", "/var/lib/hermes/x"))
 OUTBOX = pathlib.Path(os.environ.get("X_OUTBOX", str(HOME / "outbox")))
 SENT = pathlib.Path(os.environ.get("X_SENT", str(HOME / "sent")))
@@ -47,6 +49,8 @@ SENT = pathlib.Path(os.environ.get("X_SENT", str(HOME / "sent")))
 # sentence somewhere a turn can act on.
 SETUP = pathlib.Path(os.environ.get("X_SETUP_NEEDED", str(HOME / "setup-needed.json")))
 MEDIA = pathlib.Path(os.environ.get("X_MEDIA", str(HOME / "media")))
+CHAT_IMAGES = pathlib.Path(os.environ.get("HERMES_HOME", "/var/lib/hermes")) / "cache/images"
+CACHE_OWNER_UID = 10000
 LEDGER = pathlib.Path(os.environ.get("X_LEDGER", str(HOME / "answered.json")))
 ENV_FILE = pathlib.Path(os.environ.get("X_API_ENV", "/var/lib/plow/x-api.env"))
 TICK_S = int(os.environ.get("X_SEND_TICK_S", "5"))
@@ -148,26 +152,31 @@ def api(method: str, url: str, keys: dict, body: bytes, content_type: str) -> di
         return {"error": str(exc)}
 
 
-def upload(name: str, keys: dict) -> str | None:
-    """One image, simple upload. Returns a media id or None."""
-    # Basename only, resolved inside the media directory: the file this names
-    # is chosen by the agent, and `../../` is a sentence a stranger can write.
-    path = (MEDIA / pathlib.Path(name).name).resolve()
-    if not str(path).startswith(str(MEDIA.resolve()) + os.sep) or not path.is_file():
-        print(f"[x-send] no such media {name!r} under {MEDIA}", file=sys.stderr)
-        return None
+def upload_image(image, keys: dict) -> str | None:
+    """Upload the validated, immutable byte snapshot."""
+    filename, content_type, data = image
     boundary = uuid.uuid4().hex
     body = b"".join([
         f"--{boundary}\r\n".encode(),
-        f'Content-Disposition: form-data; name="media"; filename="{path.name}"\r\n'.encode(),
-        b"Content-Type: application/octet-stream\r\n\r\n",
-        path.read_bytes(), b"\r\n", f"--{boundary}--\r\n".encode(),
+        f'Content-Disposition: form-data; name="media"; filename="{filename}"\r\n'.encode(),
+        f"Content-Type: {content_type}\r\n\r\n".encode(),
+        data, b"\r\n", f"--{boundary}--\r\n".encode(),
     ])
     result = api("POST", UPLOAD_URL, keys, body, f"multipart/form-data; boundary={boundary}")
     media_id = result.get("media_id_string")
     if not media_id:
-        print(f"[x-send] upload of {path.name} failed: {result}", file=sys.stderr)
+        print("[x-send] X did not accept the image upload", file=sys.stderr)
     return media_id
+
+
+def upload(name: str, keys: dict) -> str | None:
+    """Compatibility entry point for callers uploading a single image."""
+    try:
+        image = read_image(name, MEDIA, CHAT_IMAGES, CACHE_OWNER_UID)
+    except ValueError as exc:
+        print(f"[x-send] {exc}", file=sys.stderr)
+        return None
+    return upload_image(image, keys)
 
 
 def refuse(reason: str) -> dict:
@@ -196,9 +205,11 @@ def check(item: dict, ledger: dict) -> dict | None:
     # page check was the only guard and it missed once, in public.
     if reply_to and str(reply_to) in ledger:
         return refuse(f"{reply_to} was already answered by {ledger[str(reply_to)]}")
-    media = item.get("media") or []
+    media = item.get("media", [])
+    if media is None:
+        media = []
     if not isinstance(media, list) or len(media) > 4:
-        return refuse("media must be a list of at most 4 file names")
+        return refuse("media must be a list of at most 4 image references")
     return None
 
 
@@ -249,6 +260,15 @@ def send_one(path: pathlib.Path, keys: dict, ledger: dict) -> bool:
         finish(path, problem)
         return False
 
+    # Validate every attachment before any network call, including held mode.
+    # Missing/invalid images must never silently become a text-only post.
+    try:
+        images = [read_image(ref, MEDIA, CHAT_IMAGES, CACHE_OWNER_UID)
+                  for ref in item.get("media") or []]
+    except ValueError as exc:
+        finish(path, refuse(str(exc)))
+        return False
+
     if not ARMED:
         # Composed, checked, and not posted. The owner arms this where the
         # container is started; nothing the agent can say switches it on.
@@ -258,10 +278,10 @@ def send_one(path: pathlib.Path, keys: dict, ledger: dict) -> bool:
         return False
 
     media_ids = []
-    for name in item.get("media") or []:
-        media_id = upload(str(name), keys)
+    for image in images:
+        media_id = upload_image(image, keys)
         if not media_id:
-            finish(path, refuse(f"could not upload {name!r}"))
+            finish(path, refuse("X could not upload the image; no post was published."))
             return False
         media_ids.append(media_id)
 
