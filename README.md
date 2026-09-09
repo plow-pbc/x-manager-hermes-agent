@@ -73,7 +73,7 @@ plow-agents lines                 # pick a free line
 plow-agents mint ln_xxx           # binds this agent to that line
 
 export AGENT_ID=x-manager
-export X_API_ENV=$HOME/.config/x-api/env     # the owner's X keys, root-read only
+export X_API_ENV=$HOME/.config/x-api/env     # absolute; compose does not expand ~
 export X_MEDIA_DIR=$HOME/x-media             # images it may attach, read-only
 docker compose up --build -d
 docker compose logs -f agent

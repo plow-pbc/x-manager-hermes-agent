@@ -36,7 +36,11 @@ services:
       # /var/lib/hermes: the agent's home is writable by uid 10000, and this
       # file is the account. Only the root x-sender service opens it; the
       # poller lifts the two read-side names out of it and nothing else.
-      - ${X_API_ENV:-~/.config/x-api/env}:/var/lib/plow/x-api.env:ro
+      # An ABSOLUTE path, and required. Compose does not expand `~`: a default
+      # of ~/.config/x-api/env silently binds a DIRECTORY named `~` from the
+      # project folder, and the sender then stands down complaining about a
+      # file that exists on the host. Better to refuse to start.
+      - ${X_API_ENV:?set X_API_ENV to the absolute path of the owner's X keys}:/var/lib/plow/x-api.env:ro
       # Images the agent may attach, by basename. Read-only: it chooses which
       # of the owner's files go out, never what is in them.
       - ${X_MEDIA_DIR:-./media}:/var/lib/hermes/x/media:ro
