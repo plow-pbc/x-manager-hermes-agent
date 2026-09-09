@@ -1,13 +1,16 @@
-# X Manager
+# X Manager — Hackathon agent
 
-A Hermes agent that answers replies on your X account through Plow. It composes
-from your facts, sends jokes a short response without a link, and uses a separate
+The team's X assistant for the **AI Worth Using x Hermes Hackathon**, built on
+Hermes and Plow. Each new installation includes the same confirmed hackathon
+context and uses the installer's own X and Plow accounts. It answers from the
+bundled facts, sends jokes a short response without a link, and uses a separate
 root service to validate and publish through the X API.
 
 **[Install on your own accounts — complete guide](docs/INSTALL.md)**
 
 Start there even if you have never used Plow or the X developer API. The guide
-covers account activation, your own credentials, a fresh Docker home, an unarmed
+covers account activation, your own credentials, a fresh Docker home with the
+hackathon context already loaded, an unarmed
 test, public replies, and per-installation Agent Index reporting.
 
 [Agent Index page](https://aiworthusing.com/agent-index/danedelattre-x-manager)
@@ -20,9 +23,10 @@ ledger and the operator-controlled `X_ARMED` setting before posting. Write keys
 are mounted outside the agent's home and are not handed to the model process.
 
 Replies under the owner's posts are eligible; bare mentions are keyword-filtered.
-The default persona is focused on Plow/hackathon questions, with Discord as the
-fallback for unknown serious questions. Set your own facts and adapt the scope
-before using it for an unrelated business.
+The [bundled event facts](runtime/facts.md) cover dates, prizes, requirements,
+links, and the selection process: the September 22 ranking qualifies the top 10;
+the September 23 Plow Team vote selects the top 3. Discord is the fallback for
+unknown serious questions. A teammate does not have to recreate this context.
 
 The image builds from the digest-pinned
 [Plow Hermes base](https://github.com/plow-pbc/plow-hermes-agent), using the

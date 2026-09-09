@@ -1,7 +1,9 @@
-# Install X Manager on your own accounts
+# Install the X Hackathon agent on your own accounts
 
 This guide installs a separate Hermes agent that answers replies on **your X
-account**, using **your Plow account and line**. You do not need Daniel's Mac,
+account**, using **your Plow account and line**. The AI Worth Using x Hermes hackathon
+context comes bundled: dates, prizes, submission requirements, support links,
+and the top-10 qualification followed by the Plow Team vote. You do not need Daniel's Mac,
 SSH access, tokens, phone number, or X developer app.
 
 Allow time to activate Plow and obtain X developer access. The software starts
@@ -183,7 +185,7 @@ Resolve errors before continuing. HTTP 401 usually means invalid credentials;
 requires checking billing/access; 429 means rate limited. Inspect the current
 console and API response, not old saved account-status notes.
 
-## 5. Configure this installation and supply facts
+## 5. Configure this installation — hackathon context is included
 
 ```sh
 cat > .env <<EOF_ENV
@@ -194,15 +196,13 @@ X_MEDIA_DIR=$PWD/media
 POLL_SEC=15
 EOF_ENV
 chmod 600 .env
-nano .install/facts.md
 ```
 
-Write the facts the agent may use: what your product/event does, confirmed links,
-dates, prices, and contact information. Do not copy Daniel's event details or
-invent missing facts. This version is oriented toward Plow/hackathon discussions:
-unknown serious hackathon questions go to `https://aiworthusing.com/discord`;
-jokes get a short answer without a link. If that scope is not yours, adapt the
-persona and queue prompt **before building**, including that fallback destination.
+The shared [hackathon facts](../runtime/facts.md) are included in the image and
+appear at `/var/lib/hermes/x/facts.md` in a new home volume. Teammates do not
+need to re-enter event details or copy the author's files. Read the bundled facts
+to see exactly what the agent knows. Unknown serious questions go to the support
+Discord; jokes receive a short answer without a link.
 
 All replies under your own posts are eligible; bare mentions are keyword-filtered.
 You can set comma-separated `X_KEYWORDS` in `.env` for your topic. If you allow a
@@ -237,16 +237,16 @@ That tag assumes the clone directory above is `x-manager-hermes-agent` and you
 have not overridden the Compose project name. Fix connectivity rather than
 removing the checksum or substituting an unreviewed download.
 
-Before starting the gateway, seed **your** facts and fresh cursor into the new
-volume. This refuses to overwrite an existing installation's files:
+Before starting the gateway, seed your fresh mentions cursor into the new
+volume. The image already supplies the hackathon facts. This checks they exist
+and refuses to overwrite an existing polling cursor:
 
 ```sh
 docker compose run --rm --no-deps --entrypoint /bin/sh \
   -v "$PWD/.install:/install:ro" agent -c '
   set -eu
-  test ! -e /var/lib/hermes/x/facts.md
+  test -s /var/lib/hermes/x/facts.md
   test ! -e /var/lib/hermes/x/poller-state.json
-  install -o 10000 -g 10000 -m 0600 /install/facts.md /var/lib/hermes/x/facts.md
   install -o 10000 -g 10000 -m 0600 /install/poller-state.json /var/lib/hermes/x/poller-state.json
 '
 ```
@@ -353,6 +353,9 @@ real reply once. Keep the server and Docker running.
 - **Keep state:** do not use `docker compose down -v` during ordinary updates.
   It deletes the home, including the deduplication ledger and reporter identity.
   Keep one container/home per X account to avoid duplicate responders.
+  Bundled facts initialize new volumes; rebuilding does not overwrite an
+  existing volume's facts. Apply organizer updates explicitly to an existing
+  installation after reviewing any local corrections.
 - **No keys / HTTP 401:** check the mounted file on the Docker host, the exact
   variable names, and whether the tokens are current. Never print the key file
   into logs. The agent process must not be able to read the write credentials.

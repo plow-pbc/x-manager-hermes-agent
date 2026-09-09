@@ -35,7 +35,7 @@ RUN set -eu; \
     sha="$(sed -n 's/^sha=//p' /opt/plow/agent-index-client.pin)"; \
     want="$(sed -n 's/^sha256=//p' /opt/plow/agent-index-client.pin)"; \
     path="$(sed -n 's/^path=//p' /opt/plow/agent-index-client.pin)"; \
-    curl -fsS --max-time 60 -o /opt/plow/agent-index-client.py \
+    curl -fsS --retry 3 --retry-delay 2 --retry-max-time 90 --max-time 60 -o /opt/plow/agent-index-client.py \
       "https://raw.githubusercontent.com/plow-pbc/agent-index-client/${sha}/${path}"; \
     got="$(sha256sum /opt/plow/agent-index-client.py | cut -d' ' -f1)"; \
     [ "$got" = "$want" ] || { echo "agent-index client is $got, pin says $want" >&2; exit 1; }; \
@@ -44,8 +44,8 @@ RUN set -eu; \
 COPY image/s6-overlay/ /etc/s6-overlay/
 RUN chmod 0755 /etc/s6-overlay/scripts/x-cron.sh
 
-# The four directories the two halves talk through, plus the facts file the
-# owner fills in. All inside the home so they survive a rebuild.
+# The directories the two halves talk through. The organizer-supplied facts
+# are bundled below, so a fresh installation already knows the hackathon.
 #
 # The permissions ARE the trust boundary, so they are not uniform:
 #   queue    0700 agent   a stranger's words; the turn reads them as data
@@ -58,3 +58,8 @@ RUN install -d -o 10000 -g 10000 -m 0700 /var/lib/hermes/x \
  && install -d -o 10000 -g 10000 -m 0700 /var/lib/hermes/x/outbox \
  && install -d -o root -g root -m 0755 /var/lib/hermes/x/sent \
  && install -d -o root -g root -m 0755 /var/lib/hermes/x/media
+
+# Docker initializes a fresh home volume with the shared event context.
+# Existing home volumes retain their own facts and reply ledger.
+COPY --chown=10000:10000 runtime/facts.md /var/lib/hermes/x/facts.md
+RUN chmod 0600 /var/lib/hermes/x/facts.md
