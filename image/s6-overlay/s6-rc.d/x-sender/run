@@ -5,7 +5,7 @@
 # It never drops to the agent's uid, and nothing it holds is exported to one.
 # The agent writes a request into the outbox and reads the result out of sent/;
 # the keys are on the other side of that line. See x_send.py.
-set -eu
+set -u
 
 PATH=/command:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
 export PATH

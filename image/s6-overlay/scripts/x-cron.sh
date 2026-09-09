@@ -44,7 +44,6 @@ done
   HERMES_CUSTOM_PLOW_API_KEY="$HERMES_CUSTOM_PLOW_API_KEY" PLOW_AGENT_TOKEN="$PLOW_AGENT_TOKEN" \
   PLOW_MCP_URL="$PLOW_MCP_URL" PLOW_API_BASE="$PLOW_API_BASE" API_SERVER_KEY="$API_SERVER_KEY" \
   /opt/hermes/bin/hermes cron create --name "$NAME" --deliver origin "0 5 1 1 *" \
-  "$(cat /opt/plow/x-shared/x-reply.prompt)" \
-  || echo "x-cron: could not create $NAME -- the queue will fill until it exists" >&2
+  "$(cat /opt/plow/x-shared/x-reply.prompt)"
 
 exit 0

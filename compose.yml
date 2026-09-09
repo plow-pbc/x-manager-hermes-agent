@@ -5,7 +5,7 @@ services:
     environment:
       # Which registered Agent Index page receives this image's usage. Without
       # it the reporter stands down rather than guessing a name.
-      AGENT_ID: ${AGENT_ID:-x-manager}
+      AGENT_ID: ${AGENT_ID:-danedelattre-x-manager}
       # The published brake. Anything but 1 means the agent composes, the
       # sender checks, and nothing is posted -- the result comes back `held`
       # so the owner can read exactly what would have gone out.

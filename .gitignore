@@ -8,3 +8,8 @@ docs/superpowers/plans/
 
 # The agent credential `plow-agents mint` writes here. A live bearer token.
 plow-credentials
+
+# Installer-owned files, never publication material.
+.install/
+media/
+docs/local-installation.md

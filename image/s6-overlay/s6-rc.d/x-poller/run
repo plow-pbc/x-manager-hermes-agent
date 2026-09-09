@@ -6,7 +6,7 @@
 # own dotenv under $HERMES_HOME is never sourced here: that file belongs to uid
 # 10000, and laundering it into this process would let one turn rewrite what
 # the unattended producer runs on.
-set -eu
+set -u
 
 # Explicit and absolute. A service inherits the supervision tree's PATH, not a
 # login shell's.

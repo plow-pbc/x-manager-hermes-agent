@@ -1,0 +1,8 @@
+.git
+.env
+plow-credentials
+__pycache__
+**/__pycache__
+media
+.install
+docs/local-installation.md
