@@ -1,0 +1,75 @@
+#!/bin/sh
+# The X producer: one mentions request every POLL_SEC, no model.
+#
+# NO with-contenv, deliberately. This service reads only the names it needs out
+# of the container environment as root and exports nothing else. The agent's
+# own dotenv under $HERMES_HOME is never sourced here: that file belongs to uid
+# 10000, and laundering it into this process would let one turn rewrite what
+# the unattended producer runs on.
+set -eu
+
+# Explicit and absolute. A service inherits the supervision tree's PATH, not a
+# login shell's.
+PATH=/command:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
+export PATH
+
+X_API_ENV=/var/lib/plow/x-api.env
+export X_API_ENV
+
+# The READ side of the credential, and only that: a bearer token that can list
+# mentions, plus which account is the owner's. The OAuth1 keys that can POST
+# stay in the file, read by x-sender, which never drops out of root -- see
+# x_send.py. This process becomes the agent's uid a few lines down, so anything
+# exported here is readable by a process the agent's turns can reach.
+X_BEARER_TOKEN=$(sed -n 's/^X_BEARER_TOKEN=//p' "$X_API_ENV" 2>/dev/null || true)
+X_USER_ID=$(sed -n 's/^X_USER_ID=//p' "$X_API_ENV" 2>/dev/null || true)
+export X_BEARER_TOKEN X_USER_ID
+
+POLL_SEC=$(cat /run/s6/container_environment/POLL_SEC 2>/dev/null || echo 120)
+X_UNTIL=$(cat /run/s6/container_environment/X_UNTIL 2>/dev/null || true)
+X_KEYWORDS=$(cat /run/s6/container_environment/X_KEYWORDS 2>/dev/null || true)
+export POLL_SEC X_UNTIL X_KEYWORDS
+
+# And the tenant's own values, because firing a turn is not a local operation:
+# `hermes cron run` calls the model through Plow and opens the relay's MCP
+# server. A process without these gets HTTP 401 and a failed run. Still an
+# allowlist, and still explicit: these five names and nothing else.
+for _n in HERMES_CUSTOM_PLOW_API_KEY PLOW_AGENT_TOKEN PLOW_MCP_URL PLOW_API_BASE API_SERVER_KEY; do
+  _v=$(cat "/run/s6/container_environment/$_n" 2>/dev/null || true)
+  export "$_n=$_v"
+done
+
+if [ -z "$X_BEARER_TOKEN" ] || [ -z "$X_USER_ID" ]; then
+  echo "x-poller: $X_API_ENV has no X_BEARER_TOKEN/X_USER_ID -- standing down." >&2
+  echo "Mount the owner's X credentials there (see compose.yml)." >&2
+  exec /bin/sleep 86400
+fi
+
+HERMES_HOME=/var/lib/hermes
+export HERMES_HOME
+
+while :; do
+  # /opt/plow, never $HERMES_HOME/skills. Everything under the home belongs to
+  # uid 10000, so scheduling a home copy would run whatever a turn last wrote
+  # there, unattended.
+  /command/s6-setuidgid hermes \
+    env HOME="$HERMES_HOME" HERMES_HOME="$HERMES_HOME" \
+    X_BEARER_TOKEN="$X_BEARER_TOKEN" X_USER_ID="$X_USER_ID" \
+    POLL_SEC="$POLL_SEC" X_UNTIL="$X_UNTIL" X_KEYWORDS="$X_KEYWORDS" \
+    HERMES_CUSTOM_PLOW_API_KEY="$HERMES_CUSTOM_PLOW_API_KEY" \
+    PLOW_AGENT_TOKEN="$PLOW_AGENT_TOKEN" PLOW_MCP_URL="$PLOW_MCP_URL" \
+    PLOW_API_BASE="$PLOW_API_BASE" API_SERVER_KEY="$API_SERVER_KEY" \
+    /opt/hermes/.venv/bin/python3 /opt/plow/x-shared/scripts/x_run.py
+  rc=$?
+
+  # Exit 0 is the deadline, not a crash: x_run returns 0 once X_UNTIL has
+  # passed, and that is how "stop for good" is expressed. Respawning it would
+  # turn the stop into a hot loop.
+  if [ "$rc" -eq 0 ]; then
+    echo "x-poller: past X_UNTIL, standing down for good" >&2
+    exec /bin/sleep 86400
+  fi
+
+  echo "x-poller: producer exited $rc; restarting in 30s" >&2
+  /bin/sleep 30
+done

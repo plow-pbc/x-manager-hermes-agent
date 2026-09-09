@@ -1,0 +1,51 @@
+services:
+  agent:
+    # Cold build needs the base first: docker pull "$(awk '/^FROM/{print $2;exit}' Dockerfile)"
+    build: .
+    environment:
+      # Which registered Agent Index page receives this image's usage. Without
+      # it the reporter stands down rather than guessing a name.
+      AGENT_ID: ${AGENT_ID:-x-manager}
+      # The published brake. Anything but 1 means the agent composes, the
+      # sender checks, and nothing is posted -- the result comes back `held`
+      # so the owner can read exactly what would have gone out.
+      #
+      # It lives here and not in the prompt because the last generation's
+      # dry-run flag travelled through the model's own shell and did not
+      # survive: it posted for real. Nothing a turn can say reaches this line.
+      X_ARMED: ${X_ARMED:-0}
+      # 120s. X's user-context mention timeline allows far fewer requests per
+      # 15 minutes than Product Hunt's point budget.
+      POLL_SEC: ${POLL_SEC:-120}
+      # Hosts this agent may put in a tweet. A launch thread is mostly a link,
+      # so a blanket no-URL rule would make it useless for the job; the
+      # allowlist is what keeps a stranger's tweet from getting a link of
+      # theirs published under the owner's name.
+      X_ALLOWED_HOSTS: ${X_ALLOWED_HOSTS:-luma.com,lu.ma,aiworthusing.com,producthunt.com,plow.co,github.com}
+      # Extra words that make a BARE mention worth a turn, comma separated.
+      # Replies under the owner's own tweets are queued whatever they say.
+      X_KEYWORDS: ${X_KEYWORDS:-}
+      # Optional hard stop, YYYY-MM-DD. The producer exits cleanly past it and
+      # the service stands down instead of respawning.
+      X_UNTIL: ${X_UNTIL:-}
+    volumes:
+      # `.host`, not the path the agent reads: a bind carries this machine's
+      # ownership in, and the image copies the file into place as root itself.
+      - ./plow-credentials:/var/lib/plow/credentials.host:ro
+      # The owner's X keys. Read-only, and never bound anywhere under
+      # /var/lib/hermes: the agent's home is writable by uid 10000, and this
+      # file is the account. Only the root x-sender service opens it; the
+      # poller lifts the two read-side names out of it and nothing else.
+      - ${X_API_ENV:-~/.config/x-api/env}:/var/lib/plow/x-api.env:ro
+      # Images the agent may attach, by basename. Read-only: it chooses which
+      # of the owner's files go out, never what is in them.
+      - ${X_MEDIA_DIR:-./media}:/var/lib/hermes/x/media:ro
+      # The agent's home: its sessions, the X queue and outbox, the facts file,
+      # and the poller's state all live here and survive `up`/`down`.
+      - agent-home:/var/lib/hermes
+    # The agent checkpoints its session on SIGTERM and its supervisor allows
+    # 30s for that, so Docker's own deadline has to sit outside that one.
+    stop_grace_period: 35s
+
+volumes:
+  agent-home:

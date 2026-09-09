@@ -1,0 +1,41 @@
+#!/bin/sh
+# The outbox sender. Root, and it stays root: this is the only process in the
+# image that reads the OAuth1 keys able to post as the owner.
+#
+# It never drops to the agent's uid, and nothing it holds is exported to one.
+# The agent writes a request into the outbox and reads the result out of sent/;
+# the keys are on the other side of that line. See x_send.py.
+set -eu
+
+PATH=/command:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
+export PATH
+
+X_API_ENV=/var/lib/plow/x-api.env
+HERMES_HOME=/var/lib/hermes
+export X_API_ENV HERMES_HOME
+
+# The brake, read where the container was started and nowhere else. The last
+# generation shipped a dry-run flag the model's own shell could set, and it
+# posted for real. This one is not reachable from a turn.
+X_ARMED=$(cat /run/s6/container_environment/X_ARMED 2>/dev/null || true)
+X_ALLOWED_HOSTS=$(cat /run/s6/container_environment/X_ALLOWED_HOSTS 2>/dev/null || true)
+export X_ARMED X_ALLOWED_HOSTS
+
+if [ ! -r "$X_API_ENV" ]; then
+  echo "x-sender: cannot read $X_API_ENV -- standing down. Mount the owner's" >&2
+  echo "X credentials there (see compose.yml)." >&2
+  exec /bin/sleep 86400
+fi
+
+while :; do
+  /opt/hermes/.venv/bin/python3 /opt/plow/x-shared/scripts/x_send.py
+  rc=$?
+  # A missing or broken credential is exit 1 and a setup mistake: say it once
+  # and stop, rather than reprinting it every five seconds forever.
+  if [ "$rc" -eq 1 ]; then
+    echo "x-sender: refused to start (above); standing down" >&2
+    exec /bin/sleep 86400
+  fi
+  echo "x-sender: exited $rc; restarting in 30s" >&2
+  /bin/sleep 30
+done
