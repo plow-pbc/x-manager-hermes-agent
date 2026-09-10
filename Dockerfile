@@ -4,12 +4,13 @@
 # pinned by digest and never moved: every tenant VM inherits this exact
 # filesystem while holding that owner's Plow credential, so a moving tag would
 # substitute code underneath them.
-FROM public.ecr.aws/e1h7x4a2/plow-cloud-agents:base-97034704867e0c8b982f8f3416ff5639b6023358@sha256:b1b860d63c9e60075d15394f1a9ae93af5200c00692d0cc93548f6a05e46cc4b
+FROM public.ecr.aws/e1h7x4a2/plow-cloud-agents:base-4acf2e96c375c1f0e0ec67eaaf705b632194b904@sha256:345b59e01fbf45e0275f62403c766d55d12ff161916272b5cd9f51b37d697297
 
-# Replaces the base's own SOUL.md; first boot re-asserts root ownership on that
-# file, which is what the trailing chmod answers.
-COPY runtime/SOUL.md /var/lib/hermes/SOUL.md
-RUN chmod 0644 /var/lib/hermes/SOUL.md
+# Identity: only what is specific to this agent. plow-init writes the home's
+# SOUL.md on every boot as the base persona followed by this file; nothing is
+# COPYed to /var/lib/hermes/SOUL.md, which is overwritten at boot.
+COPY runtime/persona.md /opt/hermes/plow-seed/persona.md
+RUN chmod 0644 /opt/hermes/plow-seed/persona.md
 COPY LICENSE NOTICE /usr/share/doc/x-manager/
 
 # The producer and the sender, root-owned and out of the agent's reach.
