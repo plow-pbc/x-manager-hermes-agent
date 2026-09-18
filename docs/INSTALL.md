@@ -85,7 +85,8 @@ plow-agents mint ln_YOUR_FREE_LINE
 ```
 
 This creates `./plow-credentials` with mode 600. Keep it private. Mint **before**
-starting Docker, otherwise a missing bind source can become a directory.
+starting Docker: compose loads it as `env_file`, and a missing one stops the
+stack rather than starting an agent that cannot reach Plow.
 
 If every line is occupied, stop here and decide which of **your own** agents you
 want to retire. `plow-agents revoke ln_LINE_TO_RETIRE` releases a self-hosted
