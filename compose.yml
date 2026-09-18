@@ -26,10 +26,12 @@ services:
       # Optional hard stop, YYYY-MM-DD. The producer exits cleanly past it and
       # the service stands down instead of respawning.
       X_UNTIL: ${X_UNTIL:-}
+    # What `plow-agents mint` wrote: where Plow is and this agent's token. The
+    # base reads both from the environment (plow-hermes-agent#108) and no longer
+    # copies a `credentials.host` bind into place, so the file has to arrive as
+    # environment or the boot parks with no gateway.
+    env_file: ./plow-credentials
     volumes:
-      # `.host`, not the path the agent reads: a bind carries this machine's
-      # ownership in, and the image copies the file into place as root itself.
-      - ./plow-credentials:/var/lib/plow/credentials.host:ro
       # The owner's X keys. Read-only, and never bound anywhere under
       # /var/lib/hermes: the agent's home is writable by uid 10000, and this
       # file is the account. Only the root x-sender service opens it; the
