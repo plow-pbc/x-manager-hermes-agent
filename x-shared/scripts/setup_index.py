@@ -3,14 +3,12 @@
 import importlib.util
 import json
 import os
-import pathlib
 import re
 import secrets
 import sys
 import urllib.parse
 import urllib.request
 
-from x_send import read_env
 
 
 def provision(client, agent):
@@ -49,12 +47,9 @@ def provision(client, agent):
 def main():
     if os.geteuid() != 0:
         raise SystemExit("Run this setup through the documented Compose command as root.")
-    credentials = read_env(pathlib.Path("/var/lib/plow/credentials.host"))
-    token = credentials.get("PLOW_AGENT_TOKEN", "")
-    if not token:
-        raise SystemExit("Mounted plow-credentials has no PLOW_AGENT_TOKEN.")
-    os.environ["PLOW_AGENT_TOKEN"] = token
-    os.environ["PLOW_API_BASE"] = credentials.get("PLOW_API_BASE", "https://api.plow.co")
+    if not os.environ.get("PLOW_AGENT_TOKEN"):
+        raise SystemExit("No PLOW_AGENT_TOKEN in the environment; compose hands it over via env_file.")
+    os.environ.setdefault("PLOW_API_BASE", "https://api.plow.co")
     os.environ["HOME"] = os.environ["HERMES_HOME"] = "/var/lib/hermes"
     os.setgroups([])
     os.setgid(10000)
