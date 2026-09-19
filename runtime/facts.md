@@ -76,8 +76,8 @@ Publisher registration uses the client's --register, --agent, --name and
 --blurb options with that publisher's Plow credential. The --install-url option
 links to the project's public installation instructions.
 
-The project image includes the agent-index reporting service, following the
-Life Assistant example. Its AGENT_ID matches the registered project ID.
+The project image reports usage through the agent-index service its Plow base
+image ships. Its AGENT_ID matches the registered project ID.
 Registration alone does not report usage; the reporter must be installed,
 configured and running.
 
