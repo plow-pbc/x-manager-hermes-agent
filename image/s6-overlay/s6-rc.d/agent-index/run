@@ -21,6 +21,7 @@ export PATH
 # is; without it there is nothing to report FOR, so the service stands down
 # rather than guessing a name.
 PLOW_AGENT_TOKEN=$(cat /run/s6/container_environment/PLOW_AGENT_TOKEN 2>/dev/null || true)
+PLOW_API_BASE=$(cat /run/s6/container_environment/PLOW_API_BASE 2>/dev/null || true)
 AGENT_ID=$(cat /run/s6/container_environment/AGENT_ID 2>/dev/null || true)
 export AGENT_ID
 
@@ -63,10 +64,11 @@ while :; do
   case $? in
     0) ;;
     3)
-      /command/s6-setuidgid hermes \
-        env HOME="$HERMES_HOME" HERMES_HOME="$HERMES_HOME" AGENT_ID="$AGENT_ID" PLOW_AGENT_TOKEN="$PLOW_AGENT_TOKEN" \
-        /opt/hermes/.venv/bin/python3 /opt/plow/agent-index-client.py \
-        --register --agent "$AGENT_ID" >/dev/null || {
+      # The documented installer setup drops privileges and only mints a key;
+      # it does not attempt to claim the publisher's listing.
+      env HOME="$HERMES_HOME" HERMES_HOME="$HERMES_HOME" AGENT_ID="$AGENT_ID" \
+        PLOW_API_BASE="$PLOW_API_BASE" PLOW_AGENT_TOKEN="$PLOW_AGENT_TOKEN" \
+        /opt/hermes/.venv/bin/python3 /opt/plow/x-shared/scripts/setup_index.py >/dev/null || {
       echo "agent-index: no index key this hour, not reporting" >&2
       /bin/sleep 3600
       continue
