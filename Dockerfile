@@ -4,7 +4,7 @@
 # pinned by digest and never moved: every tenant VM inherits this exact
 # filesystem while holding that owner's Plow credential, so a moving tag would
 # substitute code underneath them.
-FROM public.ecr.aws/e1h7x4a2/plow-cloud-agents:base-ef0019372ff8bca593611b31ebd2e08f9f1458ff@sha256:a8a2f97ad78b8192d80a984dce81d3bf5a9a883d18cb7b677704913a09b56aee
+FROM public.ecr.aws/e1h7x4a2/plow-cloud-agents:base-f117b3a6997cc9d15c35c2d76aa0908fdd30befe@sha256:74229024d849b4c659f84f737a5937ba794b02dd9844ae8bee7727599c2f4d32
 
 # Identity: only what is specific to this agent. plow-init writes the home's
 # SOUL.md on every boot as the base persona followed by this file; nothing is
