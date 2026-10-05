@@ -10,9 +10,13 @@
 # /v1/chats/.../messages); `agent-index-client` owns the client the
 # Dockerfile pins (vendor/client.pin); and `plow-agents` is the CLI
 # docs/INSTALL.md walks the owner through (login, lines, mint, revoke).
+# `life-assistant-hermes-agent` is the worked example this repo copied its
+# skeleton and agent-index service from (NOTICE, README), so drift between
+# the two copies is reviewable.
 # Latch is not listed: this agent uses the X API, not the owner's Mac.
 
 plow-pbc/plow-hermes-agent
 plow-pbc/plow
 plow-pbc/agent-index-client
 plow-pbc/plow-agents
+plow-pbc/life-assistant-hermes-agent
